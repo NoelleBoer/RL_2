@@ -5,19 +5,34 @@ from ShortCutAgents import QLearningAgent
 
 
 def run_repititions(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
+    # Initialise a clean environment
+    env = ShortcutEnvironment()
+    # Keep track of the average q table over all repititions
+    average_q_table = np.zeros((env.state_size(), env.action_size()))
     for rep in range(n_repetitions):
-        env = ShortcutEnvironment()
+        print(f"Starting repitition {rep+1}")
+        # Initialise a clean agent for every repitition
         agent = QLearningAgent(n_actions=env.action_size(), n_states=env.state_size(),
                                epsilon=epsilon, alpha=alpha, gamma=gamma)
-
         for ep in range(n_episodes):
+            # Get the starting state
             s = env.state()
             while not env.done():
+                # Select an action from the policy difined in the agent
                 a = agent.select_action(s)
+                # Take the action and observe the reward
                 r = env.step(a)
+                # Get the new state after taking the action
                 s_prime = env.state()
+                # Update the q table of the agent
                 agent.update(s, s_prime, a, r)
+                # Set the current state to the new state
                 s = s_prime
+            # Reset the environment after each episode and each repitition
+            env.reset()
+        # Update the average q table over all repititions after finishing al episodes
+        average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
+    return average_q_table
 
 
 def print_greedy_actions(Q):
@@ -35,4 +50,5 @@ def print_greedy_actions(Q):
 
 
 if __name__ == '__main__':
-    run_repititions(n_episodes=1, n_repetitions=1)
+    q = run_repititions(n_episodes=1000, n_repetitions=10)
+    print_greedy_actions(q)
