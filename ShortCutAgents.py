@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+
 class QLearningAgent(object):
 
     def __init__(self, n_actions, n_states, epsilon, alpha=0.1, gamma=0.99):
@@ -14,21 +15,21 @@ class QLearningAgent(object):
 
     def select_action(self, state):
         # Find the index of the current best arm with the highest mean
-        best_action = np.argmax(self.means)
+        best_action = np.argmax(self.q_table[state])
         # Initialise the policy with the probability of not selecting the current best arm
-        policy = np.full_like(self.means, (epsilon / (self.n_actions - 1)))
+        policy = np.full_like(self.q_table[state], (self.epsilon / (self.n_actions - 1)))
         # Set the probabily of selecting the current best arm
-        policy[best_action] = 1 - epsilon
+        policy[best_action] = 1 - self.epsilon
         # Sample from the arms using the policy
         a = np.random.choice(self.n_actions, p=policy)
         return a
 
-    def update(self, state, action, reward):
+    def update(self, state, next_state, action, reward):
         best_next_action = np.argmax(self.q_table[next_state])
-        td_target = reward + self.gamma * self.q_table[next_state, best_next_action]
-        td_error = td_target - self.q_table[state, action]
-        self.q_table[state, action] += self.alpha * td_error
+        td_target = reward + self.gamma * self.q_table[next_state, best_next_action] - self.q_table[state, action]
+        self.q_table[state, action] += self.alpha * td_target
         pass
+
 
 class SARSAAgent(object):
 
@@ -57,6 +58,7 @@ class SARSAAgent(object):
         td_delta = td_target - self.q_table[state, action]
         self.q_table[state, action] += self.alpha * td_delta  # Update Q-value
         pass
+
 
 class ExpectedSARSAAgent(object):
 
