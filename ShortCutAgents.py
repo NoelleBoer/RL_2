@@ -13,11 +13,15 @@ class QLearningAgent(object):
         pass
 
     def select_action(self, state):
-        if random.uniform(0, 1) < self.epsilon:
-            action = random.choice(range(self.n_actions))  # Exploration
-        else:
-            action = np.argmax(self.q_table[state])  # Exploitation
-        return action
+        # Find the index of the current best arm with the highest mean
+        best_action = np.argmax(self.means)
+        # Initialise the policy with the probability of not selecting the current best arm
+        policy = np.full_like(self.means, (epsilon / (self.n_actions - 1)))
+        # Set the probabily of selecting the current best arm
+        policy[best_action] = 1 - epsilon
+        # Sample from the arms using the policy
+        a = np.random.choice(self.n_actions, p=policy)
+        return a
 
     def update(self, state, action, reward):
         best_next_action = np.argmax(self.q_table[next_state])
@@ -38,11 +42,15 @@ class SARSAAgent(object):
         pass
 
     def select_action(self, state):
-        if random.uniform(0, 1) < self.epsilon:
-            action = random.choice(range(self.n_actions))  # Exploration: random action
-        else:
-            action = np.argmax(self.q_table[state])  # Exploitation: best action from Q-table
-        return action
+        # Find the index of the current best arm with the highest mean
+        best_action = np.argmax(self.means)
+        # Initialise the policy with the probability of not selecting the current best arm
+        policy = np.full_like(self.means, (epsilon / (self.n_actions - 1)))
+        # Set the probabily of selecting the current best arm
+        policy[best_action] = 1 - epsilon
+        # Sample from the arms using the policy
+        a = np.random.choice(self.n_actions, p=policy)
+        return a
 
     def update(self, state, action, reward):
         td_target = reward + self.gamma * self.q_table[next_state, next_action]
@@ -62,11 +70,15 @@ class ExpectedSARSAAgent(object):
         pass
 
     def select_action(self, state):
-        if random.uniform(0, 1) < self.epsilon:
-            action = random.choice(range(self.n_actions))  # Exploration
-        else:
-            action = np.argmax(self.q_table[state])  # Exploitation
-        return action
+        # Find the index of the current best arm with the highest mean
+        best_action = np.argmax(self.means)
+        # Initialise the policy with the probability of not selecting the current best arm
+        policy = np.full_like(self.means, (epsilon / (self.n_actions - 1)))
+        # Set the probabily of selecting the current best arm
+        policy[best_action] = 1 - epsilon
+        # Sample from the arms using the policy
+        a = np.random.choice(self.n_actions, p=policy)
+        return a
 
     def update(self, state, action, reward):
         policy = np.ones(self.n_actions) * self.epsilon / self.n_actions
