@@ -1,5 +1,6 @@
 # Write your experiments in here! You can use the plotting helper functions from the previous assignment if you want.
 import numpy as np
+import tkinter as tk
 from ShortCutEnvironment import ShortcutEnvironment
 from ShortCutAgents import QLearningAgent
 
@@ -35,6 +36,33 @@ def run_repititions(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
     return average_q_table
 
 
+def print_greedy_actions_tk(Q):
+    root = tk.Tk()
+    root.title("Greedy Actions")
+
+    # Define symbols for each action
+    symbols = ['↑', '↓', '←', '→']
+
+    for i in range(12):
+        for j in range(12):
+            max_index = np.argmax(Q[i*12 + j])
+            if np.max(Q[i*12 + j]) == 0:
+                symbol = '⨯'
+                label_color = 'red'
+            else:
+                symbol = symbols[max_index]
+                label_color = 'black'
+            if i == 8 and j == 8:
+                label_color = 'green'
+            elif (i == 2 or i == 9) and j == 2:
+                label_color = 'blue'
+            label = tk.Label(root, text=symbol, font=("Helvetica", 16),
+                             width=2, height=1, borderwidth=1, relief="solid", fg=label_color)
+            label.grid(row=i, column=j)
+
+    root.mainloop()
+
+
 def print_greedy_actions(Q):
     greedy_actions = np.argmax(Q, 1).reshape((12, 12))
     print_string = np.zeros((12, 12), dtype=str)
@@ -50,5 +78,5 @@ def print_greedy_actions(Q):
 
 
 if __name__ == '__main__':
-    q = run_repititions(n_episodes=1000, n_repetitions=10)
-    print_greedy_actions(q)
+    q = run_repititions(n_episodes=1000, n_repetitions=5)
+    print_greedy_actions_tk(q)
