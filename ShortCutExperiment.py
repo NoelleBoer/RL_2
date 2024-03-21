@@ -2,10 +2,9 @@
 import numpy as np
 import tkinter as tk
 from ShortCutEnvironment import ShortcutEnvironment
-from ShortCutAgents import QLearningAgent
+from ShortCutAgents import QLearningAgent, SARSAAgent
 
-
-def run_repititions(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
+def run_repititions_QLearning(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
     # Initialise a clean environment
     env = ShortcutEnvironment()
     # Keep track of the average q table over all repititions
@@ -19,7 +18,7 @@ def run_repititions(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
             # Get the starting state
             s = env.state()
             while not env.done():
-                # Select an action from the policy difined in the agent
+                # Select an action from the policy defined in the agent
                 a = agent.select_action(s)
                 # Take the action and observe the reward
                 r = env.step(a)
@@ -30,6 +29,38 @@ def run_repititions(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
                 # Set the current state to the new state
                 s = s_prime
             # Reset the environment after each episode and each repitition
+            env.reset()
+        # Update the average q table over all repititions after finishing al episodes
+        average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
+    return average_q_table
+
+def run_repititions_SARSA(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
+    # Initialise a clean environment
+    env = ShortcutEnvironment()
+    # Keep track of the average q table over all repititions
+    average_q_table = np.zeros((env.state_size(), env.action_size()))
+    for rep in range(n_repetitions):
+        print(f"Starting repitition {rep+1}")
+        # Initialise a clean agent for every repitition
+        agent = SARSAAgent(n_actions=env.action_size(), n_states=env.state_size(),
+                               epsilon=epsilon, alpha=alpha, gamma=gamma)
+        for ep in range(n_episodes):
+            # Get the starting state
+            s = env.state()
+            # Choose the initial action based on the current state
+            a = agent.select_action(s)
+            while not env.done():
+                # Take the action and observe the reward
+                r = env.step(a)  # Assuming env.step returns only the reward
+                # Get the new state after taking the action
+                s_prime = env.state()
+                # Select the next action from the next state using the policy defined in the agent
+                a_prime = agent.select_action(s_prime)
+                # Update the Q table of the agent
+                agent.update(s, a, r, s_prime, a_prime)
+                # Update the state and action for the next iteration
+                s, a = s_prime, a_prime
+            # Reset the environment after each episode
             env.reset()
         # Update the average q table over all repititions after finishing al episodes
         average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
@@ -78,5 +109,5 @@ def print_greedy_actions(Q):
 
 
 if __name__ == '__main__':
-    q = run_repititions(n_episodes=1000, n_repetitions=5)
+    q = run_repititions_SARSA(n_episodes=1000, n_repetitions=5)
     print_greedy_actions_tk(q)
