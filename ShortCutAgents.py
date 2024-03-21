@@ -82,10 +82,10 @@ class ExpectedSARSAAgent(object):
         a = np.random.choice(self.n_actions, p=policy)
         return a
 
-    def update(self, state, action, reward):
-        policy = np.ones(self.n_actions) * self.epsilon / self.n_actions
-        best_next_action = np.argmax(self.q_table[next_state])
-        policy[best_next_action] += (1.0 - self.epsilon)
-        expected_q = np.dot(self.q_table[next_state], policy)
+    def update(self, state, action, reward, next_state):
+        next_action = self.select_action(next_state)  # Used for Expected SARSA update, but action not actually taken
+        next_action_probs = np.ones(self.n_actions) * self.epsilon / self.n_actions
+        next_action_probs[np.argmax(self.q_table[next_state])] += (1.0 - self.epsilon)
+        expected_q = np.dot(self.q_table[next_state], next_action_probs)
         self.q_table[state, action] += self.alpha * (reward + self.gamma * expected_q - self.q_table[state, action])
         pass

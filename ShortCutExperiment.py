@@ -2,7 +2,7 @@
 import numpy as np
 import tkinter as tk
 from ShortCutEnvironment import ShortcutEnvironment
-from ShortCutAgents import QLearningAgent, SARSAAgent
+from ShortCutAgents import QLearningAgent, SARSAAgent, ExpectedSARSAAgent
 
 def run_repititions_QLearning(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
     # Initialise a clean environment
@@ -66,6 +66,17 @@ def run_repititions_SARSA(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gam
         average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
     return average_q_table
 
+def run_repititions_ESARSA(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
+    env = ShortcutEnvironment()
+    average_q_table = np.zeros((env.state_size(), env.action_size()))
+    for rep in range(n_repetitions):
+        agent = ExpectedSARSAAgent(env.state_size(), env.action_size(), alpha, gamma, epsilon)
+        for episode in range(n_episodes):
+            state = env.reset()
+            while not env.done():
+                # iets
+        average_q_table += (agent.q_table - average_q_table) / (rep + 1)
+    return average_q_table
 
 def print_greedy_actions_tk(Q):
     root = tk.Tk()
@@ -109,5 +120,5 @@ def print_greedy_actions(Q):
 
 
 if __name__ == '__main__':
-    q = run_repititions_SARSA(n_episodes=1000, n_repetitions=5)
+    q = run_repititions_ESARSA(n_episodes=1000, n_repetitions=5)
     print_greedy_actions_tk(q)
