@@ -9,37 +9,24 @@ from Helper import LearningCurvePlot, smooth
 
 def run_repititions_QLearning(n_episodes, n_repetitions=1, epsilon=0.1, alpha=0.1, gamma=1):
     print(f"Running {n_repetitions} repititions of {n_episodes} episodes")
-    # Initialise a clean environment
-    env = ShortcutEnvironment()
-    # Keep track of the average q table over all repititions
+    env = ShortcutEnvironment()  # Initialise a clean environment
     average_q_table = np.zeros((env.state_size(), env.action_size()))
-    # Keep track of the average cumulative reward of each episode over all repititions
     average_rewards = np.zeros(n_episodes)
     for rep in range(n_repetitions):
         print(f"Starting repitition {rep+1}")
-        # Initialise a clean agent for every repitition
         agent = QLearningAgent(n_actions=env.action_size(), n_states=env.state_size(),
-                               epsilon=epsilon, alpha=alpha, gamma=gamma)
-        # Keep track of the cumalative reward of each episode
-        rewards = np.zeros(n_episodes)
+                               epsilon=epsilon, alpha=alpha, gamma=gamma)  # Initialise a clean agent
+        rewards = np.zeros(n_episodes)  # Keep track of the cumalative reward of each episode
         for ep in range(n_episodes):
-            # Get the starting state
-            s = env.state()
+            s = env.state()  # Get the starting state
             while not env.done():
-                # Select an action from the policy defined in the agent
-                a = agent.select_action(s)
-                # Take the action and observe the reward
-                r = env.step(a)
-                # Add the reward to the total episode rewards
-                rewards[ep] += r
-                # Get the new state after taking the action
-                s_prime = env.state()
-                # Update the q table of the agent
-                agent.update(s, s_prime, a, r)
-                # Set the current state to the new state
-                s = s_prime
-            # Reset the environment after each episode
-            env.reset()
+                a = agent.select_action(s)  # Select an action from the policy defined in the agent
+                r = env.step(a)  # Take the action and observe the reward
+                rewards[ep] += r  # Add the reward to the total episode rewards
+                s_prime = env.state()  # Get the new state after taking the action
+                agent.update(s, s_prime, a, r)  # Update the q table of the agent
+                s = s_prime  # Set the current state to the new state
+            env.reset()  # Reset the environment after each episode
         # Update the average q table over all repititions after finishing all episodes
         average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
         # Update the average cumulative reward of each episode over all repititions after finishing all episodes

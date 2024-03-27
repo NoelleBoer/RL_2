@@ -14,15 +14,12 @@ class QLearningAgent(object):
         pass
 
     def select_action(self, state):
-        # Find the index of the current best arm with the highest mean
         best_action = np.argmax(self.q_table[state])
-        # Initialise the policy with the probability of not selecting the current best arm
-        policy = np.full_like(self.q_table[state], (self.epsilon / (self.n_actions - 1)))
-        # Set the probabily of selecting the current best arm
-        policy[best_action] = 1 - self.epsilon
-        # Sample from the arms using the policy
-        a = np.random.choice(self.n_actions, p=policy)
-        return a
+        if np.random.random() > self.epsilon:
+            action = best_action
+        else:
+            action = np.random.choice([x for x in range(self.n_actions) if x != best_action])
+        return action
 
     def update(self, state, next_state, action, reward):
         best_next_action = np.argmax(self.q_table[next_state])
