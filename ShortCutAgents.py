@@ -1,10 +1,11 @@
+# Own code added by Daniël Zee (s2063131) and Noëlle Boer (s2505169)
+
 import numpy as np
-import random
 
 
 class QLearningAgent(object):
 
-    def __init__(self, n_actions, n_states, epsilon=0.1, alpha=0.1, gamma=1):
+    def __init__(self, n_actions, n_states, epsilon, alpha, gamma):
         self.n_actions = n_actions
         self.n_states = n_states
         self.epsilon = epsilon
@@ -13,7 +14,7 @@ class QLearningAgent(object):
         self.q_table = np.zeros((n_states, n_actions))  # Initialize Q-table with zeros
         pass
 
-    def select_action(self, state):
+    def select_action(self, state):  # ϵ-greedy policy
         best_action = np.argmax(self.q_table[state])
         if np.random.random() > self.epsilon:
             action = best_action
@@ -21,7 +22,7 @@ class QLearningAgent(object):
             action = np.random.choice([x for x in range(self.n_actions) if x != best_action])
         return action
 
-    def update(self, state, action, reward, next_state):
+    def update(self, state, action, reward, next_state):  # Q-Learning update equation
         best_next_action = np.argmax(self.q_table[next_state])
         td_target = reward + self.gamma * self.q_table[next_state, best_next_action]
         td_delta = td_target - self.q_table[state, action]
@@ -31,7 +32,7 @@ class QLearningAgent(object):
 
 class SARSAAgent(object):
 
-    def __init__(self, n_actions, n_states, epsilon=0.1, alpha=0.1, gamma=1):
+    def __init__(self, n_actions, n_states, epsilon, alpha, gamma):
         self.n_actions = n_actions
         self.n_states = n_states
         self.epsilon = epsilon
@@ -40,7 +41,7 @@ class SARSAAgent(object):
         self.q_table = np.zeros((n_states, n_actions))  # Initialize Q-table with zeros
         pass
 
-    def select_action(self, state):
+    def select_action(self, state):  # ϵ-greedy policy
         best_action = np.argmax(self.q_table[state])
         if np.random.random() > self.epsilon:
             action = best_action
@@ -48,7 +49,7 @@ class SARSAAgent(object):
             action = np.random.choice([x for x in range(self.n_actions) if x != best_action])
         return action
 
-    def update(self, state, action, reward, next_state, next_action):
+    def update(self, state, action, reward, next_state, next_action):  # SARSA update equation
         td_target = reward + self.gamma * self.q_table[next_state, next_action]
         td_delta = td_target - self.q_table[state, action]
         self.q_table[state, action] += self.alpha * td_delta
@@ -57,7 +58,7 @@ class SARSAAgent(object):
 
 class ExpectedSARSAAgent(object):
 
-    def __init__(self, n_actions, n_states, epsilon, alpha=0.1, gamma=0.99):
+    def __init__(self, n_actions, n_states, epsilon, alpha, gamma):
         self.n_actions = n_actions
         self.n_states = n_states
         self.epsilon = epsilon
@@ -66,7 +67,7 @@ class ExpectedSARSAAgent(object):
         self.q_table = np.zeros((n_states, n_actions))  # Initialize Q-table with zeros
         pass
 
-    def select_action(self, state):
+    def select_action(self, state):  # ϵ-greedy policy
         best_action = np.argmax(self.q_table[state])
         if np.random.random() > self.epsilon:
             action = best_action
@@ -74,7 +75,7 @@ class ExpectedSARSAAgent(object):
             action = np.random.choice([x for x in range(self.n_actions) if x != best_action])
         return action
 
-    def update(self, state, action, reward, next_state):
+    def update(self, state, action, reward, next_state):  # expected SARSA update equation
         best_next_action = np.argmax(self.q_table[next_state])
         next_action_probs = np.full(self.n_actions, self.epsilon / (self.n_actions - 1))
         next_action_probs[best_next_action] = 1.0 - self.epsilon

@@ -1,15 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Bandit environment
-Practical for course 'Reinforcement Learning',
-Bachelor AI, Leiden University, The Netherlands
-2021
-By Thomas Moerland
-"""
+# Own code added by Daniël Zee (s2063131) and Noëlle Boer (s2505169)
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator
 from scipy.signal import savgol_filter
 
 
@@ -20,6 +13,10 @@ class LearningCurvePlot:
         self.ax.set_xlabel('Episode')
         self.ax.set_ylabel('Reward')
         self.ax.set_yscale('symlog')
+        minor_ticks = [[-i*(10**x) for i in range(1, 10)] for x in range(1, 5)]
+        minor_ticks = [x for y in minor_ticks for x in y]
+        self.ax.yaxis.set_minor_locator(FixedLocator(minor_ticks))
+
         if title is not None:
             self.ax.set_title(title)
 
@@ -30,31 +27,6 @@ class LearningCurvePlot:
             self.ax.plot(y, label=label)
         else:
             self.ax.plot(y)
-
-    def save(self, name='test.png'):
-        ''' name: string for filename of saved figure '''
-        self.ax.legend()
-        self.fig.savefig(name, dpi=300)
-
-
-class ComparisonPlot:
-
-    def __init__(self, title=None):
-        self.fig, self.ax = plt.subplots()
-        self.ax.set_xlabel('Parameter (exploration)')
-        self.ax.set_ylabel('Average reward')
-        self.ax.set_xscale('log')
-        if title is not None:
-            self.ax.set_title(title)
-
-    def add_curve(self, x, y, label=None):
-        ''' x: vector of parameter values
-        y: vector of associated mean reward for the parameter values in x 
-        label: string to appear as label in plot legend '''
-        if label is not None:
-            self.ax.plot(x, y, label=label)
-        else:
-            self.ax.plot(x, y)
 
     def save(self, name='test.png'):
         ''' name: string for filename of saved figure '''

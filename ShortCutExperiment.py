@@ -1,4 +1,5 @@
-# Write your experiments in here! You can use the plotting helper functions from the previous assignment if you want.
+# Own code added by Daniël Zee (s2063131) and Noëlle Boer (s2505169)
+
 import numpy as np
 import tkinter as tk
 from PIL import ImageGrab
@@ -130,6 +131,8 @@ def print_greedy_actions_tk(Q, file_name):
             bg_color = label.cget("bg")
             if bg_color == "white":
                 label.config(bg="pale green")
+            if bg_color == "pale green":
+                return
             symbol = label.cget("text")
             if symbol == symbols[0]:
                 i -= 1
@@ -244,4 +247,4 @@ def experiment(q_leaning, sarsa, stormy_weather, expected_sarsa):
 
 
 if __name__ == '__main__':
-    experiment(q_leaning=False, sarsa=False, stormy_weather=False, expected_sarsa=True)
+    experiment(q_leaning=True, sarsa=True, stormy_weather=True, expected_sarsa=True)
