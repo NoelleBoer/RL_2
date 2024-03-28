@@ -2,29 +2,33 @@
 import numpy as np
 import tkinter as tk
 from PIL import ImageGrab
-from ShortCutEnvironment import ShortcutEnvironment
+from ShortCutEnvironment import ShortcutEnvironment, WindyShortcutEnvironment
 from ShortCutAgents import QLearningAgent, SARSAAgent, ExpectedSARSAAgent
 from Helper import LearningCurvePlot, smooth
 
 
-def run_repititions_QLearning(n_episodes, n_repetitions=1, epsilon=0.1, alpha=0.1, gamma=1):
-    print(f"Running {n_repetitions} repititions of {n_episodes} episodes")
-    env = ShortcutEnvironment()  # Initialise a clean environment
+def run_repititions_qlearning(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1, windy=False):
+    print("Running repititions with Q-learning using the following settings:")
+    print(locals())
+    if windy:  # Initialise a clean environment
+        env = WindyShortcutEnvironment()
+    else:
+        env = ShortcutEnvironment()
     average_q_table = np.zeros((env.state_size(), env.action_size()))
     average_rewards = np.zeros(n_episodes)
     for rep in range(n_repetitions):
-        print(f"Starting repitition {rep+1}")
+        print(f"Running repitition {rep+1}", end="\r")
         agent = QLearningAgent(n_actions=env.action_size(), n_states=env.state_size(),
                                epsilon=epsilon, alpha=alpha, gamma=gamma)  # Initialise a clean agent
         rewards = np.zeros(n_episodes)  # Keep track of the cumalative reward of each episode
         for ep in range(n_episodes):
             s = env.state()  # Get the starting state
             while not env.done():
-                a = agent.select_action(s)  # Select an action from the policy defined in the agent
+                a = agent.select_action(s)  # Select the action to be performed from the state
                 r = env.step(a)  # Take the action and observe the reward
                 rewards[ep] += r  # Add the reward to the total episode rewards
                 s_prime = env.state()  # Get the new state after taking the action
-                agent.update(s, s_prime, a, r)  # Update the q table of the agent
+                agent.update(s, a, r, s_prime)  # Update the q table of the agent
                 s = s_prime  # Set the current state to the new state
             env.reset()  # Reset the environment after each episode
         # Update the average q table over all repititions after finishing all episodes
@@ -34,66 +38,79 @@ def run_repititions_QLearning(n_episodes, n_repetitions=1, epsilon=0.1, alpha=0.
     return average_q_table, average_rewards
 
 
-def run_repititions_SARSA(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
-    # Initialise a clean environment
-    env = ShortcutEnvironment()
-    # Keep track of the average q table over all repititions
+def run_repititions_sarsa(n_episodes, n_repetitions=1, epsilon=0.1, alpha=0.1, gamma=1, windy=False):
+    print("Running repititions with SARSA using the following settings:")
+    print(locals())
+    if windy:  # Initialise a clean environment
+        env = WindyShortcutEnvironment()
+    else:
+        env = ShortcutEnvironment()
     average_q_table = np.zeros((env.state_size(), env.action_size()))
+    average_rewards = np.zeros(n_episodes)
     for rep in range(n_repetitions):
-        print(f"Starting repitition {rep+1}")
-        # Initialise a clean agent for every repitition
+        print(f"Running repitition {rep+1}", end="\r")
         agent = SARSAAgent(n_actions=env.action_size(), n_states=env.state_size(),
-                           epsilon=epsilon, alpha=alpha, gamma=gamma)
+                           epsilon=epsilon, alpha=alpha, gamma=gamma)  # Initialise a clean agent
+        rewards = np.zeros(n_episodes)  # Keep track of the cumalative reward of each episode
         for ep in range(n_episodes):
-            # Get the starting state
-            s = env.state()
-            # Choose the initial action based on the current state
-            a = agent.select_action(s)
+            s = env.state()  # Get the starting state
+            a = agent.select_action(s)  # Select the initial action for the starting state
             while not env.done():
-                # Take the action and observe the reward
-                r = env.step(a)  # Assuming env.step returns only the reward
-                # Get the new state after taking the action
-                s_prime = env.state()
-                # Select the next action from the next state using the policy defined in the agent
-                a_prime = agent.select_action(s_prime)
-                # Update the Q table of the agent
-                agent.update(s, a, r, s_prime, a_prime)
-                # Update the state and action for the next iteration
-                s, a = s_prime, a_prime
-            # Reset the environment after each episode
-            env.reset()
-        # Update the average q table over all repititions after finishing al episodes
+                r = env.step(a)  # Take the action and observe the reward
+                rewards[ep] += r  # Add the reward to the total episode rewards
+                s_prime = env.state()  # Get the next state after taking the action
+                a_prime = agent.select_action(s)  # Select the action to be performed in the next state
+                agent.update(s, a, r, s_prime, a_prime)  # Update the q table of the agent
+                s = s_prime  # Set the current state to the next state
+                a = a_prime  # Set the current action to the next action
+            env.reset()  # Reset the environment after each episode
+        # Update the average q table over all repititions after finishing all episodes
         average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
-    return average_q_table
+        # Update the average cumulative reward of each episode over all repititions after finishing all episodes
+        average_rewards += 1 / (rep + 1) * (rewards - average_rewards)
+    return average_q_table, average_rewards
 
 
-def run_repititions_ESARSA(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
-    env = ShortcutEnvironment()
+def run_repititions_expectedsarsa(n_episodes, n_repetitions, epsilon=0.1, alpha=0.1, gamma=1):
+    print("Running repititions with Expected SARSA using the following settings:")
+    print(locals())
+    env = ShortcutEnvironment()  # Initialise a clean environment
     average_q_table = np.zeros((env.state_size(), env.action_size()))
+    average_rewards = np.zeros(n_episodes)
     for rep in range(n_repetitions):
-        agent = ExpectedSARSAAgent(env.state_size(), env.action_size(), alpha, gamma, epsilon)
-        for episode in range(n_episodes):
-            state = env.reset()
+        print(f"Running repitition {rep+1}", end="\r")
+        agent = ExpectedSARSAAgent(n_actions=env.action_size(), n_states=env.state_size(),
+                                   epsilon=epsilon, alpha=alpha, gamma=gamma)  # Initialise a clean agent
+        rewards = np.zeros(n_episodes)  # Keep track of the cumalative reward of each episode
+        for ep in range(n_episodes):
+            s = env.state()  # Get the starting state
             while not env.done():
-                # iets
-                pass
-        average_q_table += (agent.q_table - average_q_table) / (rep + 1)
-    return average_q_table
+                a = agent.select_action(s)  # Select the action to be performed from the state
+                r = env.step(a)  # Take the action and observe the reward
+                rewards[ep] += r  # Add the reward to the total episode rewards
+                s_prime = env.state()  # Get the new state after taking the action
+                agent.update(s, a, r, s_prime)  # Update the q table of the agent
+                s = s_prime  # Set the current state to the new state
+            env.reset()  # Reset the environment after each episode
+        # Update the average q table over all repititions after finishing all episodes
+        average_q_table += 1 / (rep + 1) * (agent.q_table - average_q_table)
+        # Update the average cumulative reward of each episode over all repititions after finishing all episodes
+        average_rewards += 1 / (rep + 1) * (rewards - average_rewards)
+    return average_q_table, average_rewards
 
 
 def print_greedy_actions_tk(Q, file_name):
     root = tk.Tk()
-
-    # Define symbols for each action
-    symbols = ['↑', '↓', '←', '→', '⨯']
-
+    symbols = ['↑', '↓', '←', '→', '⨯']  # Define symbols for each action
     labels = []
-
     for i in range(12):
         for j in range(12):
             max_index = np.argmax(Q[i*12 + j])
             if np.max(Q[i*12 + j]) == 0:
-                symbol = symbols[4]
+                if not np.any(Q[i*12 + j]):
+                    symbol = symbols[4]
+                else:
+                    symbol = symbols[max_index]
                 bg_color = "tomato"
             else:
                 symbol = symbols[max_index]
@@ -137,44 +154,94 @@ def print_greedy_actions_tk(Q, file_name):
     w = root.winfo_width()
     h = root.winfo_height()
     image = ImageGrab.grab((x, y, x + w, y + h))
-
     image.save(file_name)
 
     root.destroy()
 
 
-def experiment():
+def experiment(q_leaning, sarsa, stormy_weather, expected_sarsa):
     #################
     # 1: Q-learning #
     #################
 
-    # Experiment 1
-    n_episodes = 10000
-    q_table, rewards = run_repititions_QLearning(n_episodes)
-    print_greedy_actions_tk(q_table, file_name="qlearning_path_ep_10000.png")
+    if q_leaning:
+        # Experiment 1
+        n_repetitions = 1
+        n_episodes = 10000
+        q_table, rewards = run_repititions_qlearning(n_episodes=n_episodes, n_repetitions=n_repetitions)
+        print_greedy_actions_tk(q_table, file_name="qlearning_path.png")
 
-    # Experiment 2
-    smoothing_window = 31
-    n_repetitions = 100
-    n_episodes = 1000
-    q_table, rewards = run_repititions_QLearning(n_episodes, n_repetitions)
-    print_greedy_actions_tk(q_table, file_name="qlearning_path_rep_100_ep_10000.png")
-    plot = LearningCurvePlot("Q-learning learning curve")
-    plot.add_curve(smooth(rewards, window=smoothing_window), label="Q-learning")
-    plot.save(name="qlearning_learning_curve.png")
+        # Experiment 2
+        smoothing_window = 31
+        n_repetitions = 100
+        n_episodes = 1000
+        plot = LearningCurvePlot("Q-learning learning curve")
+        for alpha in [0.01, 0.1, 0.5, 0.9]:
+            q_table, rewards = run_repititions_qlearning(
+                n_episodes=n_episodes, n_repetitions=n_repetitions, alpha=alpha)
+            plot.add_curve(smooth(rewards, window=smoothing_window), label=f"α = {alpha}")
+        plot.save(name="qlearning_learning_curve.png")
 
     ############
     # 2: SARSA #
     ############
 
+    if sarsa:
+        # Experiment 1
+        n_repetitions = 1
+        n_episodes = 10000
+        q_table, rewards = run_repititions_sarsa(n_episodes=n_episodes, n_repetitions=n_repetitions)
+        print_greedy_actions_tk(q_table, file_name="sarsa_path.png")
+
+        # Experiment 2
+        smoothing_window = 31
+        n_repetitions = 100
+        n_episodes = 1000
+        plot = LearningCurvePlot("SARSA learning curve")
+        for alpha in [0.01, 0.1, 0.5, 0.9]:
+            q_table, rewards = run_repititions_sarsa(n_episodes=n_episodes, n_repetitions=n_repetitions, alpha=alpha)
+            plot.add_curve(smooth(rewards, window=smoothing_window), label=f"α = {alpha}")
+        plot.save(name="sarsa_learning_curve.png")
+
     #####################
     # 3: Stormy weather #
     #####################
+
+    if stormy_weather:
+        # Experiment 1
+        n_repetitions = 1
+        n_episodes = 10000
+        q_table, rewards = run_repititions_qlearning(n_episodes=n_episodes, n_repetitions=n_repetitions, windy=True)
+        print_greedy_actions_tk(q_table, file_name="qlearning_path_windy.png")
+
+        # Experiment 2
+        n_repetitions = 1
+        n_episodes = 10000
+        q_table, rewards = run_repititions_sarsa(n_episodes=n_episodes, n_repetitions=n_repetitions, windy=True)
+        print_greedy_actions_tk(q_table, file_name="sarsa_path_windy.png")
 
     #####################
     # 4: Expected SARSA #
     #####################
 
+    if expected_sarsa:
+        # Experiment 1
+        n_repetitions = 1
+        n_episodes = 10000
+        q_table, rewards = run_repititions_expectedsarsa(n_episodes=n_episodes, n_repetitions=n_repetitions)
+        print_greedy_actions_tk(q_table, file_name="expectedsarsa_path.png")
+
+        # Experiment 2
+        smoothing_window = 31
+        n_repetitions = 100
+        n_episodes = 1000
+        plot = LearningCurvePlot("Expected SARSA learning curve")
+        for alpha in [0.01, 0.1, 0.5, 0.9]:
+            q_table, rewards = run_repititions_expectedsarsa(
+                n_episodes=n_episodes, n_repetitions=n_repetitions, alpha=alpha)
+            plot.add_curve(smooth(rewards, window=smoothing_window), label=f"α = {alpha}")
+        plot.save(name="expectedsarsa_learning_curve.png")
+
 
 if __name__ == '__main__':
-    experiment()
+    experiment(q_leaning=False, sarsa=False, stormy_weather=False, expected_sarsa=True)

@@ -19,7 +19,7 @@ class LearningCurvePlot:
         self.fig, self.ax = plt.subplots()
         self.ax.set_xlabel('Episode')
         self.ax.set_ylabel('Reward')
-        self.ax.set_ylim([-200, -20])
+        self.ax.set_yscale('symlog')
         if title is not None:
             self.ax.set_title(title)
 
