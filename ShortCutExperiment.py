@@ -100,7 +100,7 @@ def run_repetitions_expectedsarsa(n_episodes, n_repetitions, epsilon=0.1, alpha=
     return average_q_table, average_rewards
 
 
-def print_greedy_actions_tk(Q, file_name):
+def print_greedy_actions_tk(Q, file_name):  # Display the greedy action and take a screenshot
     root = tk.Tk()
     symbols = ['↑', '↓', '←', '→', '⨯']  # Define symbols for each action
     labels = []
