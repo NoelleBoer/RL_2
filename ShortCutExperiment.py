@@ -60,7 +60,7 @@ def run_repetitions_sarsa(n_episodes, n_repetitions=1, epsilon=0.1, alpha=0.1, g
                 r = env.step(a)  # Take the action and observe the reward
                 rewards[ep] += r  # Add the reward to the total episode rewards
                 s_prime = env.state()  # Get the next state after taking the action
-                a_prime = agent.select_action(s)  # Select the action to be performed in the next state
+                a_prime = agent.select_action(s_prime)  # Select the action to be performed in the next state
                 agent.update(s, a, r, s_prime, a_prime)  # Update the q table of the agent
                 s = s_prime  # Set the current state to the next state
                 a = a_prime  # Set the current action to the next action
@@ -247,4 +247,4 @@ def experiment(q_leaning, sarsa, stormy_weather, expected_sarsa):
 
 
 if __name__ == '__main__':
-    experiment(q_leaning=True, sarsa=True, stormy_weather=True, expected_sarsa=True)
+    experiment(q_leaning=False, sarsa=True, stormy_weather=False, expected_sarsa=False)
